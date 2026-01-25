@@ -1,0 +1,64 @@
+{
+    "description": "Schema for MARV simulation trajectory HDF5 files",
+    "allow_extra_datasets": false,
+    "allow_extra_groups": false,
+    "allow_extra_attributes": true,
+
+    "datasets": {
+        "flipper_joint_states": {
+            "required": true,
+            "dtype": "float32",
+            "ndim": 3,
+            "shape": [null, null, 4],
+            "min_shape": [1, 1, 4],
+            "attributes": {
+                "min": {"required": false, "type": "float"},
+                "max": {"required": false, "type": "float"},
+                "mean": {"required": false, "type": "float"}
+            }
+        },
+        "orientation": {
+            "required": true,
+            "dtype": "float32",
+            "ndim": 3,
+            "shape": [null, null, 4],
+            "min_shape": [1, 1, 4],
+            "attributes": {
+                "min": {"required": false, "type": "float"},
+                "max": {"required": false, "type": "float"},
+                "mean": {"required": false, "type": "float"}
+            }
+        },
+        "position": {
+            "required": true,
+            "dtype": "float32",
+            "ndim": 3,
+            "shape": [null, null, 3],
+            "min_shape": [1, 1, 3],
+            "attributes": {
+                "min": {"required": false, "type": "float"},
+                "max": {"required": false, "type": "float"},
+                "mean": {"required": false, "type": "float"}
+            }
+        },
+        "robot_rpy": {
+            "required": true,
+            "dtype": "float32",
+            "ndim": 3,
+            "shape": [null, null, 3],
+            "min_shape": [1, 1, 3],
+            "attributes": {
+                "min": {"required": false, "type": "float"},
+                "max": {"required": false, "type": "float"},
+                "mean": {"required": false, "type": "float"}
+            }
+        },
+        "policy_sequence": {
+            "required": false,
+            "dtype": "int32",
+            "ndim": 2,
+            "shape": [null, null],
+            "attributes": {}
+        }
+    }
+}

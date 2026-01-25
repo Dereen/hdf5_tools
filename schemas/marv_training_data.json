@@ -1,0 +1,53 @@
+{
+    "description": "Schema for MARV training data HDF5 files",
+    "allow_extra_datasets": false,
+    "allow_extra_groups": false,
+    "allow_extra_attributes": true,
+
+    "datasets": {
+        "heightmaps": {
+            "required": true,
+            "dtype": "float32",
+            "ndim": 3,
+            "shape": [null, 200, 100],
+            "comment": "Heightmap data: (samples, height, width)",
+            "attributes": {
+                "min": {"required": false, "type": "float"},
+                "max": {"required": false, "type": "float"},
+                "mean": {"required": false, "type": "float"}
+            }
+        },
+        "robot_rpy": {
+            "required": true,
+            "dtype": "float32",
+            "ndim": 2,
+            "shape": [null, 3],
+            "comment": "Robot roll-pitch-yaw: (samples, 3)",
+            "attributes": {
+                "min": {"required": false, "type": "float"},
+                "max": {"required": false, "type": "float"},
+                "mean": {"required": false, "type": "float"}
+            }
+        },
+        "flipper_joint_states": {
+            "required": true,
+            "dtype": "float32",
+            "ndim": 2,
+            "shape": [null, 4],
+            "comment": "Flipper positions: (samples, 4) - front_left, front_right, rear_left, rear_right",
+            "attributes": {
+                "min": {"required": false, "type": "float"},
+                "max": {"required": false, "type": "float"},
+                "mean": {"required": false, "type": "float"}
+            }
+        },
+        "policy_index": {
+            "required": true,
+            "dtype": "int64",
+            "ndim": 1,
+            "shape": [null],
+            "comment": "Policy class labels: (samples,)",
+            "attributes": {}
+        }
+    }
+}

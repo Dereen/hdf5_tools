@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+*.bak
+*.tmp
+
+# HDF5 backups
+*.bak
+*.h5.bak
+
+# Test data
+test_data/
+*.test.hdf5
