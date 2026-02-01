@@ -155,6 +155,13 @@ def format_histogram(bin_counts: List[int], min_val: float, max_val: float,
     bin_width = (max_val - min_val) / num_bins
     total_count = sum(bin_counts)
 
+    # Detect if this is integer class data: min/max are integers and bins match range
+    is_integer_classes = (
+        min_val == int(min_val) and
+        max_val == int(max_val) and
+        num_bins == int(max_val - min_val + 1)
+    )
+
     output = []
     max_count = max(bin_counts) if bin_counts else 1
 
@@ -170,14 +177,18 @@ def format_histogram(bin_counts: List[int], min_val: float, max_val: float,
             percentage = 0
             bar_width = 0
 
-        # Format bin range
-        bin_range = f"[{bin_start:8.3f}, {bin_end:8.3f}]"
-
         # Create bar
         bar = "█" * bar_width
 
-        # Format line
-        line = f"    Bin {i+1:2d} {bin_range}: {bar:<{max_bar_width}} ({percentage:5.1f}%)"
+        # Format bin label
+        if is_integer_classes:
+            class_val = int(min_val + i)
+            bin_label = f"Class {class_val:3d}"
+        else:
+            bin_label = f"[{bin_start:8.3f}, {bin_end:8.3f}]"
+
+        # Format line with count
+        line = f"    {bin_label}: {bar:<{max_bar_width}} {count:8d} ({percentage:5.1f}%)"
         output.append(line)
 
     return "\n".join(output)
