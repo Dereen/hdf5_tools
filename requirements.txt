@@ -1,0 +1,14 @@
+# Core dependencies
+h5py>=3.0.0
+numpy>=1.20.0
+tqdm>=4.60.0
+
+# Editor (edit_hdf5.py)
+rich>=10.0.0
+textual>=0.40.0
+
+# Visualization (visualize_hdf5.py)
+graphviz>=0.20.0
+
+# Comparison heatmaps (compare_hdf5.py --heatmaps)
+matplotlib>=3.5.0

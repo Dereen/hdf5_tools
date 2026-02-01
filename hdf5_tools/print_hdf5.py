@@ -75,6 +75,8 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any, Tuple, Set
 from tqdm import tqdm
 
+from .hdf5_common import DatasetInfo, GroupInfo, FileInfo, format_size, extract_file_info
+
 
 # =============================================================================
 # Data Classes
@@ -181,36 +183,6 @@ def format_histogram(bin_counts: List[int], min_val: float, max_val: float,
     return "\n".join(output)
 
 
-@dataclass
-class DatasetInfo:
-    """Information about a dataset."""
-    name: str
-    shape: tuple
-    dtype: str
-    size_bytes: int
-    attributes: Dict[str, Any]
-    chunks: Optional[tuple] = None
-    compression: Optional[str] = None
-
-
-@dataclass
-class GroupInfo:
-    """Information about a group."""
-    name: str
-    attributes: Dict[str, Any]
-    num_datasets: int = 0
-    num_groups: int = 0
-
-
-@dataclass
-class FileInfo:
-    """Complete information about an HDF5 file."""
-    path: Path
-    size_bytes: int
-    root_attributes: Dict[str, Any]
-    datasets: Dict[str, DatasetInfo]
-    groups: Dict[str, GroupInfo]
-    errors: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -598,46 +570,7 @@ class HDF5Analyzer:
 
     def _extract_file_info(self, hdf5_path: Path) -> FileInfo:
         """Extract structure information from HDF5 file."""
-        file_info = FileInfo(
-            path=hdf5_path,
-            size_bytes=hdf5_path.stat().st_size if hdf5_path.exists() else 0,
-            root_attributes={},
-            datasets={},
-            groups={}
-        )
-
-        try:
-            with h5py.File(hdf5_path, 'r') as f:
-                file_info.root_attributes = dict(f.attrs)
-
-                def visitor(name, obj):
-                    if isinstance(obj, h5py.Dataset):
-                        file_info.datasets[name] = DatasetInfo(
-                            name=name,
-                            shape=obj.shape,
-                            dtype=str(obj.dtype),
-                            size_bytes=obj.nbytes,
-                            attributes=dict(obj.attrs),
-                            chunks=obj.chunks,
-                            compression=obj.compression
-                        )
-                    elif isinstance(obj, h5py.Group):
-                        # Count children
-                        num_ds = sum(1 for k in obj.keys() if isinstance(obj[k], h5py.Dataset))
-                        num_grp = sum(1 for k in obj.keys() if isinstance(obj[k], h5py.Group))
-                        file_info.groups[name] = GroupInfo(
-                            name=name,
-                            attributes=dict(obj.attrs),
-                            num_datasets=num_ds,
-                            num_groups=num_grp
-                        )
-
-                f.visititems(visitor)
-
-        except Exception as e:
-            file_info.errors.append(str(e))
-
-        return file_info
+        return extract_file_info(hdf5_path)
 
     def _check_quality(self, f: h5py.File, file_info: FileInfo) -> List[Dict]:
         """Check data quality (NaN, Inf, zero dimensions)."""
@@ -763,15 +696,6 @@ class HDF5Analyzer:
 # =============================================================================
 # Output Formatting
 # =============================================================================
-
-def format_size(size_bytes: int) -> str:
-    """Format byte size to human readable."""
-    for unit in ['B', 'KB', 'MB', 'GB']:
-        if size_bytes < 1024:
-            return f"{size_bytes:.2f} {unit}"
-        size_bytes /= 1024
-    return f"{size_bytes:.2f} TB"
-
 
 def print_inspection(file_info: FileInfo):
     """Print file inspection results."""
@@ -1508,16 +1432,23 @@ Examples:
         """
     )
 
+    # Common arguments shared by all subcommands
+    common_parser = argparse.ArgumentParser(add_help=False)
+    common_parser.add_argument('--clip', action='store_true',
+                               help='Copy output to clipboard')
+
     subparsers = parser.add_subparsers(dest='command', help='Command to run')
 
     # Inspect command
-    p_inspect = subparsers.add_parser('inspect', help='Inspect file structure')
+    p_inspect = subparsers.add_parser('inspect', help='Inspect file structure',
+                                      parents=[common_parser])
     p_inspect.add_argument('file', help='HDF5 file to inspect')
     p_inspect.add_argument('--print', dest='print_fields', nargs='+', metavar='FIELD',
                           help='Print values of specified datasets/attributes (e.g., --print body_names robot_colors)')
 
     # Analyze command
-    p_analyze = subparsers.add_parser('analyze', help='Analyze file(s) quality')
+    p_analyze = subparsers.add_parser('analyze', help='Analyze file(s) quality',
+                                      parents=[common_parser])
     p_analyze.add_argument('file', nargs='?', help='HDF5 file to analyze')
     p_analyze.add_argument('--dir', type=str, help='Directory to scan')
     p_analyze.add_argument('--pattern', type=str, default='**/*.hdf5',
@@ -1536,18 +1467,21 @@ Examples:
                           help='Verbose output')
 
     # Validate command
-    p_validate = subparsers.add_parser('validate', help='Validate against schema')
+    p_validate = subparsers.add_parser('validate', help='Validate against schema',
+                                       parents=[common_parser])
     p_validate.add_argument('file', help='HDF5 file to validate')
     p_validate.add_argument('--schema', '-s', required=True,
                            help='JSON schema file')
 
     # Compare command
-    p_compare = subparsers.add_parser('compare', help='Compare multiple files')
+    p_compare = subparsers.add_parser('compare', help='Compare multiple files',
+                                      parents=[common_parser])
     p_compare.add_argument('files', nargs='+', help='HDF5 files to compare')
 
     # Schema template command
     p_template = subparsers.add_parser('schema-template',
-                                       help='Generate schema template from file')
+                                       help='Generate schema template from file',
+                                       parents=[common_parser])
     p_template.add_argument('file', help='HDF5 file to use as template')
     p_template.add_argument('--output', '-o', help='Output file (default: stdout)')
 
@@ -1562,6 +1496,8 @@ Examples:
         parser.print_help()
         return 1
 
+    from .clip_utils import ClipboardCapture
+
     commands = {
         'inspect': cmd_inspect,
         'analyze': cmd_analyze,
@@ -1570,7 +1506,9 @@ Examples:
         'schema-template': cmd_schema_template,
     }
 
-    return commands[args.command](args)
+    with ClipboardCapture(clip=args.clip):
+        result = commands[args.command](args)
+    return result
 
 
 if __name__ == '__main__':

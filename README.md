@@ -25,6 +25,14 @@ Interactive terminal editor for **modifying** HDF5 files:
 - Configuration management
 - Automatic backup on modifications
 
+### visualize_hdf5.py
+Graphical visualization tool for **understanding** HDF5 file structure:
+- Hierarchical PDF graph of file structure
+- Color-coded nodes for groups, datasets, virtual datasets, and links
+- Complete metadata display (shape, dtype, compression, attributes)
+- Support for all HDF5 features (hard/soft/external links, virtual datasets, dimension scales)
+- Detailed storage information (chunking, compression, resizable dimensions)
+
 ## Programmatic API
 
 ```python
@@ -122,6 +130,25 @@ python hdf5/edit_hdf5.py data.hdf5
 #   ?       - Show help
 ```
 
+### visualize_hdf5.py - Structure Visualization
+
+```bash
+# Generate default visualization
+python visualize_hdf5.py data.hdf5
+
+# Generate with custom output name
+python visualize_hdf5.py data.hdf5 -o my_visualization
+
+# The output is a PDF with hierarchical graph showing:
+#   - Light blue boxes: Groups
+#   - Light green boxes: Datasets
+#   - Plum boxes: Virtual datasets
+#   - Yellow dashed boxes: Soft links
+#   - Red dotted boxes: External links
+#   - Shape, dtype, storage info, attributes displayed inline
+#   - All links and references visualized with appropriate edge styles
+```
+
 ## API Reference (print_hdf5.py)
 
 ### Functions
@@ -209,21 +236,24 @@ python hdf5/edit_hdf5.py data.hdf5
 
 ## Tool Comparison
 
-| Feature | print_hdf5.py | edit_hdf5.py |
-|---------|---------------|-------------|
-| **Read files** | ✅ Yes | ✅ Yes |
-| **Write/Modify** | ❌ No | ✅ Yes |
-| **Interactive** | ❌ CLI only | ✅ Terminal UI |
-| **Inspect structure** | ✅ Yes | ✅ Yes |
-| **View data** | ✅ Yes | ✅ Yes (multi-dimensional) |
-| **Statistics** | ✅ Yes | ❌ No |
-| **Histograms** | ✅ Yes | ❌ No |
-| **Schema validation** | ✅ Yes | ❌ No |
-| **Add/Remove items** | ❌ No | ✅ Yes |
-| **Edit datasets** | ❌ No | ✅ Yes |
-| **Vector operations** | ❌ No | ✅ Yes (Cut, Subsample, Sample) |
-| **Batch processing** | ✅ Yes | ❌ No |
-| **Automatic backups** | ❌ No | ✅ Yes |
+| Feature | print_hdf5.py | edit_hdf5.py | visualize_hdf5.py |
+|---------|---------------|-------------|-------------------|
+| **Read files** | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Write/Modify** | ❌ No | ✅ Yes | ❌ No |
+| **Interactive** | ❌ CLI only | ✅ Terminal UI | ❌ CLI only |
+| **Inspect structure** | ✅ Yes | ✅ Yes | ✅ Yes |
+| **View data** | ✅ Yes | ✅ Yes (multi-dimensional) | ❌ No |
+| **Statistics** | ✅ Yes | ❌ No | ❌ No |
+| **Histograms** | ✅ Yes | ❌ No | ❌ No |
+| **Schema validation** | ✅ Yes | ❌ No | ❌ No |
+| **Add/Remove items** | ❌ No | ✅ Yes | ❌ No |
+| **Edit datasets** | ❌ No | ✅ Yes | ❌ No |
+| **Vector operations** | ❌ No | ✅ Yes (Cut, Subsample, Sample) | ❌ No |
+| **Batch processing** | ✅ Yes | ❌ No | ❌ No |
+| **Automatic backups** | ❌ No | ✅ Yes | ❌ No |
+| **Graph visualization** | ❌ No | ❌ No | ✅ Yes (PDF) |
+| **Show all metadata** | ❌ No | ❌ No | ✅ Yes (inline) |
+| **Link visualization** | ❌ No | ❌ No | ✅ Yes (hard/soft/external) |
 
 ## Workflow Examples
 
@@ -237,6 +267,9 @@ python hdf5/print_hdf5.py analyze training_data.hdf5 --stats --histogram 20 --va
 
 # 3. Validate against schema
 python hdf5/print_hdf5.py validate training_data.hdf5 --schema schemas/marv_training_data.json
+
+# 4. Generate visualization for comprehensive understanding
+python visualize_hdf5.py training_data.hdf5
 ```
 
 ### Data Editing Pipeline
@@ -244,11 +277,23 @@ python hdf5/print_hdf5.py validate training_data.hdf5 --schema schemas/marv_trai
 # 1. Inspect and analyze current file
 python hdf5/print_hdf5.py analyze data.hdf5 --stats
 
-# 2. Open in editor to modify
+# 2. Generate visualization to understand structure
+python visualize_hdf5.py data.hdf5
+
+# 3. Open in editor to modify
 python hdf5/edit_hdf5.py data.hdf5
 
-# 3. Re-analyze to verify changes
+# 4. Re-analyze to verify changes
 python hdf5/print_hdf5.py analyze data.hdf5 --stats --validate
+```
+
+### Structure Understanding
+```bash
+# Quickly visualize complex nested structure
+python visualize_hdf5.py complex_data.hdf5 -o structure_overview
+
+# Then analyze in detail if needed
+python hdf5/print_hdf5.py inspect complex_data.hdf5
 ```
 
 ### Batch Quality Check

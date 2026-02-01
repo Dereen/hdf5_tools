@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hdf5-tools"
+version = "0.1.0"
+description = "Comprehensive tooling for HDF5 file inspection, analysis, validation, comparison, and interactive editing"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Valentyn Cihala", email = "cihalavalentyn@gmail.com"}
+]
+keywords = ["hdf5", "analysis", "visualization", "validation", "editor"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "h5py>=3.0.0",
+    "numpy>=1.20.0",
+    "tqdm>=4.60.0",
+]
+
+[project.optional-dependencies]
+editor = [
+    "rich>=10.0.0",
+    "textual>=0.40.0",
+]
+visualize = [
+    "graphviz>=0.20.0",
+]
+compare = [
+    "matplotlib>=3.5.0",
+]
+all = [
+    "rich>=10.0.0",
+    "textual>=0.40.0",
+    "graphviz>=0.20.0",
+    "matplotlib>=3.5.0",
+]
+
+[project.scripts]
+hdf5-print = "hdf5_tools.print_hdf5:main"
+hdf5-edit = "hdf5_tools.edit_hdf5:main"
+hdf5-visualize = "hdf5_tools.visualize_hdf5:main"
+hdf5-compare = "hdf5_tools.compare_hdf5:main"
+
+[project.urls]
+Homepage = "https://github.com/valentyncihala/hdf5-tools"
+Repository = "https://github.com/valentyncihala/hdf5-tools"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["hdf5_tools*"]
