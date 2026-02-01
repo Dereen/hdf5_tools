@@ -13,7 +13,7 @@ Command-line tool for **reading and analyzing** HDF5 files:
 - Statistics computation (min/max/mean)
 - Schema validation
 - File comparison
-- Histogram generation
+- Histogram generation with counts (shows class labels for integers)
 - Batch processing
 
 ### edit_hdf5.py
