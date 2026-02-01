@@ -546,11 +546,21 @@ class HDF5Analyzer:
 
     def __init__(self, validate_values: bool = False, compute_stats: bool = False,
                  histogram_bins: Optional[int] = None,
-                 exclude_datasets: Optional[List[str]] = None):
+                 exclude_datasets: Optional[List[str]] = None,
+                 only_datasets: Optional[List[str]] = None):
         self.validate_values = validate_values
         self.compute_stats = compute_stats
         self.histogram_bins = histogram_bins
         self.exclude_datasets = exclude_datasets or []
+        self.only_datasets = only_datasets or []
+
+    def _should_process(self, ds_name: str) -> bool:
+        """Check if dataset should be processed based on only/exclude filters."""
+        if self.only_datasets and ds_name not in self.only_datasets:
+            return False
+        if ds_name in self.exclude_datasets:
+            return False
+        return True
 
     def analyze_file(self, hdf5_path: Path) -> AnalysisResult:
         """Perform complete analysis of an HDF5 file."""
@@ -631,6 +641,9 @@ class HDF5Analyzer:
         stats = {}
 
         for ds_name, ds_info in file_info.datasets.items():
+            if not self._should_process(ds_name):
+                continue
+
             dataset = f[ds_name]
 
             if not (np.issubdtype(dataset.dtype, np.floating) or
@@ -675,8 +688,7 @@ class HDF5Analyzer:
         histograms = {}
 
         for ds_name, ds_info in file_info.datasets.items():
-            # Skip excluded datasets
-            if ds_name in self.exclude_datasets:
+            if not self._should_process(ds_name):
                 continue
 
             dataset = f[ds_name]
@@ -1024,12 +1036,14 @@ def cmd_analyze(args):
             return 1
 
     exclude_datasets = getattr(args, 'exclude', []) or []
+    only_datasets = getattr(args, 'only', []) or []
 
     analyzer = HDF5Analyzer(
         validate_values=args.validate,
         compute_stats=args.stats,
         histogram_bins=histogram_bins,
-        exclude_datasets=exclude_datasets
+        exclude_datasets=exclude_datasets,
+        only_datasets=only_datasets
     )
 
     # Load schema if provided
@@ -1267,6 +1281,7 @@ def analyze(
     compute_stats: bool = False,
     histogram_bins: Optional[int] = None,
     exclude_datasets: Optional[List[str]] = None,
+    only_datasets: Optional[List[str]] = None,
     schema: Dict | str | Path | None = None,
     print_output: bool = True
 ) -> AnalysisResult:
@@ -1279,6 +1294,7 @@ def analyze(
         compute_stats: Compute min/max/mean statistics
         histogram_bins: Number of bins for histogram (None to skip)
         exclude_datasets: List of dataset names to exclude from stats/histogram
+        only_datasets: List of dataset names to include (if set, only these are processed)
         schema: JSON schema dict, or path to schema file
         print_output: If True, print results to stdout
 
@@ -1290,7 +1306,8 @@ def analyze(
         validate_values=validate_values,
         compute_stats=compute_stats,
         histogram_bins=histogram_bins,
-        exclude_datasets=exclude_datasets
+        exclude_datasets=exclude_datasets,
+        only_datasets=only_datasets
     )
     result = analyzer.analyze_file(hdf5_path)
 
@@ -1474,6 +1491,8 @@ Examples:
                           help='Compute histogram with N bins (requires --stats or stored statistics)')
     p_analyze.add_argument('--exclude', type=str, nargs='+', metavar='DATASET',
                           help='Exclude datasets from stats/histogram computation')
+    p_analyze.add_argument('--only', type=str, nargs='+', metavar='DATASET',
+                          help='Only include these datasets in stats/histogram computation')
     p_analyze.add_argument('--verbose', '-v', action='store_true',
                           help='Verbose output')
 
